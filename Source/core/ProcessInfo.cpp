@@ -278,7 +278,7 @@ namespace Core {
     , _current()
     , _index(0) {
 #ifndef __WINDOWS__
-        FindChildren(_pids, [=](const uint32_t foundparentPID, const uint32_t childPID) {
+        FindChildren(_pids, [=](const process_t foundparentPID, const uint32_t childPID) {
             bool accept = false;
             char fullname[PATH_MAX];
             ProcessName(foundparentPID, fullname, sizeof(fullname));
@@ -296,12 +296,13 @@ namespace Core {
     }
 
     // Get the Child Processes with a name name from a Parent pid
-    ProcessInfo::Iterator::Iterator(const uint32_t parentPID, const string& childname, const bool removepath) 
-    : _pids()
-    , _current()
-    , _index(0) {
+    ProcessInfo::Iterator::Iterator(const process_t parentPID, const string& childname, const bool removepath)
+        : _pids()
+        , _current()
+        , _index(0)
+    {
 #ifndef __WINDOWS__
-        FindChildren(_pids, [=](const uint32_t foundparentPID, const uint32_t childPID) {
+        FindChildren(_pids, [=](const process_t foundparentPID, const uint32_t childPID) {
             bool accept = false;
 
             if ( parentPID == foundparentPID ) {
@@ -316,7 +317,7 @@ namespace Core {
     }
 
     // Get the Children of the given PID.
-    ProcessInfo::Iterator::Iterator(const uint32_t parentPID)
+    ProcessInfo::Iterator::Iterator(const process_t parentPID)
     {
 #ifdef __WINDOWS__
         HANDLE hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);

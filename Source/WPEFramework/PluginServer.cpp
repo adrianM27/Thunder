@@ -323,7 +323,15 @@ namespace PluginHost
             result = Core::ERROR_INPROGRESS;
         } else if ((currentState == IShell::UNAVAILABLE) || (currentState == IShell::DEACTIVATION) || (currentState == IShell::DESTROYED)) {
             result = Core::ERROR_ILLEGAL_STATE;
-        } else if ((currentState == IShell::DEACTIVATED) || (currentState == IShell::PRECONDITION)) {
+        }
+        else if (currentState == IShell::HIBERNATED) {
+            // Wake up the Hibernated process..
+            Wakeup();
+            State(ACTIVATED);
+            Unlock();
+            result = Core::ERROR_NONE;
+
+        } else if ((currentState == IShell::DEACTIVATED) || (currentState == IShell::state::PRECONDITION)) {
 
             // Load the interfaces, If we did not load them yet...
             if (_handler == nullptr) {
@@ -509,6 +517,7 @@ namespace PluginHost
         return (result);
     }
 
+
     uint32_t Server::Service::Unavailable(const reason why) {
         uint32_t result = Core::ERROR_NONE;
 
@@ -520,7 +529,8 @@ namespace PluginHost
             (currentState == IShell::ACTIVATION)   || 
             (currentState == IShell::DESTROYED)    || 
             (currentState == IShell::ACTIVATED)    ||
-            (currentState == IShell::PRECONDITION)) {
+            (currentState == IShell::PRECONDITION) ||
+            (currentState == IShell::state::HIBERNATED)) {
             result = Core::ERROR_ILLEGAL_STATE;
         }
         else if (currentState == IShell::DEACTIVATED) {
@@ -551,6 +561,40 @@ namespace PluginHost
         return (result);
 
     }
+
+    uint32_t Server::Service::Hibernate(const PluginHost::IShell::reason why) {
+        uint32_t result = Core::ERROR_NONE;
+
+        Lock();
+
+        IShell::state currentState(State());
+
+        if (currentState != IShell::state::ACTIVATED) {
+            result = Core::ERROR_ILLEGAL_STATE;
+        }
+        else if (_connection != nullptr) {
+            result = Core::ERROR_BAD_REQUEST;
+        }
+        else {
+            // Oke we have an Connection so there is something to Hibernate..
+            RPC::IMonitorableProcess* local = _connection->QueryInterface< RPC::IMonitorableProcess>();
+
+            if (local == nullptr) {
+                result = Core::ERROR_BAD_REQUEST;
+            }
+            else {
+                local->Release();
+            }
+        }
+        Unlock();
+
+        return (result);
+
+    }
+
+    void Server::Service::Wakeup() {
+    }
+
 
     /* virtual */ uint32_t Server::Service::Submit(const uint32_t id, const Core::ProxyType<Core::JSON::IElement>& response)
     {

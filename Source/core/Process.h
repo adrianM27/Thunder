@@ -68,13 +68,10 @@ namespace Core {
             }
             inline void Erase(const string& value)
             {
-                #ifdef __WINDOWS__
-                #pragma warning(disable : 4834)
-                #endif
-                std::remove(_options.begin(), _options.end(), value);
-                #ifdef __WINDOWS__
-                #pragma warning(default : 4834)
-                #endif
+                std::vector<string>::iterator index(std::find(_options.begin(), _options.end(), value));
+                if (index != _options.end()) {
+                    _options.erase(index);
+                }
             }
             inline void Clear()
             {
