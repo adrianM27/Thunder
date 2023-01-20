@@ -1008,7 +1008,7 @@ namespace PluginHost {
             }
 
         private:
-            void Wakeup();
+            void Wakeup(const string &callSign);
             virtual std::vector<string> GetLibrarySearchPaths(const string& locator) const override
             {
                 std::vector<string> all_paths;

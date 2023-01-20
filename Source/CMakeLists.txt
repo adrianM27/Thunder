@@ -74,6 +74,8 @@ option(DEADLOCK_DETECTION
         "Enable deadlock detection tooling." OFF)
 option(WARNING_REPORTING
         "Include warning reporting in the build." OFF)
+option(PLUGINSHIBERNATE
+        "Include plugins hibernation in the build." ON)
 #
 # Build type specific options
 #
@@ -171,6 +173,10 @@ endif()
 
 if(EXECUTABLE)
     add_subdirectory(WPEFramework)
+endif()
+
+if(PLUGINSHIBERNATE)
+    add_subdirectory(pluginshibernate)
 endif()
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/cmake

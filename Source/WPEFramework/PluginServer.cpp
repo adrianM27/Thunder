@@ -28,6 +28,10 @@
 #include "../processcontainers/ProcessContainer.h"
 #endif
 
+#ifdef PLUGINSHIBERNATE_ENABLED
+#include "../pluginshibernate/PluginsHibernate.h"
+#endif
+
 namespace WPEFramework {
 
 ENUM_CONVERSION_BEGIN(Core::ProcessInfo::scheduler)
@@ -326,8 +330,18 @@ namespace PluginHost
         }
         else if (currentState == IShell::HIBERNATED) {
             // Wake up the Hibernated process..
-            Wakeup();
+            const Core::EnumerateType<PluginHost::IShell::reason> textReason(why);
+            const string callSign(PluginHost::Service::Configuration().Callsign.Value());
+
+            Wakeup(callSign);
             State(ACTIVATED);
+            _administrator.StateChange(this);
+
+#if THUNDER_RESTFULL_API
+            _administrator.Notification(_T("{\"callsign\":\"") + callSign + _T("\",\"state\":\"deactivated\",\"reason\":\"") + textReason.Data() + _T("\"}"));
+#endif
+
+            _administrator.Notification(PluginHost::Server::ForwardMessage(callSign, string(_T("{\"state\":\"activated\",\"reason\":\"")) + textReason.Data() + _T("\"}")));
             Unlock();
             result = Core::ERROR_NONE;
 
@@ -530,7 +544,7 @@ namespace PluginHost
             (currentState == IShell::DESTROYED)    || 
             (currentState == IShell::ACTIVATED)    ||
             (currentState == IShell::PRECONDITION) ||
-            (currentState == IShell::state::HIBERNATED)) {
+            (currentState == IShell::HIBERNATED)) {
             result = Core::ERROR_ILLEGAL_STATE;
         }
         else if (currentState == IShell::DEACTIVATED) {
@@ -565,34 +579,70 @@ namespace PluginHost
     uint32_t Server::Service::Hibernate(const PluginHost::IShell::reason why) {
         uint32_t result = Core::ERROR_NONE;
 
+#ifdef PLUGINSHIBERNATE_ENABLED
+
         Lock();
 
         IShell::state currentState(State());
+        IStateControl* stateControl = nullptr;
 
-        if (currentState != IShell::state::ACTIVATED) {
+        if (currentState != IShell::state::ACTIVATED
+            || (stateControl = _handler->QueryInterface<PluginHost::IStateControl>()) == nullptr
+            || stateControl->State() != IStateControl::SUSPENDED) {
             result = Core::ERROR_ILLEGAL_STATE;
         }
-        else if (_connection != nullptr) {
+        else if (_connection == nullptr) {
             result = Core::ERROR_BAD_REQUEST;
         }
         else {
-            // Oke we have an Connection so there is something to Hibernate..
-            RPC::IMonitorableProcess* local = _connection->QueryInterface< RPC::IMonitorableProcess>();
+            //TODO: replace with timeoute from plugin config
+            const uint32_t HIBERNATE_TIMEOUTE_MS = 10000;
+            const string callSign(PluginHost::Service::Configuration().Callsign.Value());
+            const Core::EnumerateType<PluginHost::IShell::reason> textReason(why);
 
-            if (local == nullptr) {
-                result = Core::ERROR_BAD_REQUEST;
+            if(PluginsHibernate::IPluginsHibernateAdministrator::Instance().hibernate(callSign, HIBERNATE_TIMEOUTE_MS))
+            {
+                SYSLOG(Logging::Notification, (_T("Hibernate plugin[%s] succeed"), callSign.c_str()));
+                State(HIBERNATED);
+                _administrator.StateChange(this);
+
+#if THUNDER_RESTFULL_API
+                _administrator.Notification(_T("{\"callsign\":\"") + callSign + _T("\",\"state\":\"hibernated\",\"reason\":\"") + textReason.Data() + _T("\"}"));
+#endif
+
+                _administrator.Notification(PluginHost::Server::ForwardMessage(callSign, string(_T("{\"state\":\"hibernated\",\"reason\":\"")) + textReason.Data() + _T("\"}")));
+
             }
-            else {
-                local->Release();
+            else
+            {
+                SYSLOG(Logging::Notification, (_T("Hibernate plugin[%s] error"), callSign.c_str()));
+                result = Core::ERROR_GENERAL;
             }
         }
         Unlock();
+
+#else
+        result = Core::ERROR_NOT_SUPPORTED; 
+#endif
 
         return (result);
 
     }
 
-    void Server::Service::Wakeup() {
+    void Server::Service::Wakeup(const string &callSign) {
+    #ifdef PLUGINSHIBERNATE_ENABLED
+        //TODO: replace with timeoute from plugin config
+        const uint32_t WAKEUP_TIMEOUTE_MS = 10000;
+        bool restoreSucceed = PluginsHibernate::IPluginsHibernateAdministrator::Instance().wakeup(callSign, WAKEUP_TIMEOUTE_MS);
+        if(restoreSucceed)
+        {
+            SYSLOG(Logging::Notification, (_T("Wakeup plugin[%s] succeed"), callSign.c_str()));
+        }
+        else
+        {
+            SYSLOG(Logging::Notification, (_T("Wakeup plugin[%s] error"), callSign.c_str()));
+        }
+    #endif
     }
 
 

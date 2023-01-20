@@ -46,6 +46,7 @@ namespace PluginHost {
                 ACTIVATED = PluginHost::IShell::ACTIVATED,
                 ACTIVATION = PluginHost::IShell::ACTIVATION,
                 DESTROYED = PluginHost::IShell::DESTROYED,
+                HIBERNATED = PluginHost::IShell::HIBERNATED,
                 PRECONDITION = PluginHost::IShell::PRECONDITION,
                 SUSPENDED,
                 RESUMED

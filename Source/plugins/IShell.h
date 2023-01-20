@@ -18,7 +18,7 @@
  */
 
 #ifndef __ISHELL_H__
-#define __ISHELL_H__
+#define __ISHELL_H__ 
 
 #include "IPlugin.h"
 #include "ISubSystem.h"
