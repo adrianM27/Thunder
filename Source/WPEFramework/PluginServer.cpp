@@ -28,6 +28,10 @@
 #include "../processcontainers/ProcessContainer.h"
 #endif
 
+//#ifdef PLUGINSHIBERNATE_ENABLED
+#include "../pluginshibernate/PluginsHibernate.h"
+//#endif
+
 namespace WPEFramework {
 
 ENUM_CONVERSION_BEGIN(Core::ProcessInfo::scheduler)
@@ -508,6 +512,81 @@ namespace PluginHost
 
         return (result);
     }
+
+    uint32_t Server::Service::Hibernate(const reason why)
+    {
+        uint32_t result = Core::ERROR_NONE;
+        bool hibernateSucceed = false;
+
+        Lock();
+
+        IShell::state currentState(State());
+
+        const string className(PluginHost::Service::Configuration().ClassName.Value());
+        const string callSign(PluginHost::Service::Configuration().Callsign.Value());
+
+        SYSLOG(Logging::Notification, (_T("Trying to hibernate plugin[%s]:[%s]"), className.c_str(), callSign.c_str()));
+
+        IStateControl* stateControl = nullptr;
+
+        if (currentState == IShell::ACTIVATED
+            && PluginsHibernate::IPluginsHibernateAdministrator::Instance().isProcessed(callSign) == false
+            && (stateControl = _handler->QueryInterface<PluginHost::IStateControl>()) != nullptr
+            && stateControl->State() == IStateControl::SUSPENDED) {
+
+            hibernateSucceed = PluginsHibernate::IPluginsHibernateAdministrator::Instance().hibernate(callSign, 10000);
+            if(hibernateSucceed)
+            {
+                SYSLOG(Logging::Notification, (_T("Hibernate plugin[%s] succeed"), callSign.c_str()));
+            }
+            else
+            {
+                SYSLOG(Logging::Notification, (_T("Hibernate plugin[%s] error"), callSign.c_str()));
+            }
+
+        } else {
+            SYSLOG(Logging::Notification, (_T("Illegal state %d to hibernate plugin[%s]:[%s]"), (int)currentState, className.c_str(), callSign.c_str()));
+            result = Core::ERROR_ILLEGAL_STATE;
+        }
+
+        Unlock();
+
+        return result;
+    }
+
+    uint32_t Server::Service::Restore(const reason why)
+    {
+        uint32_t result = Core::ERROR_NONE;
+        bool restoreSucceed = false;
+
+        Lock();
+
+        const string className(PluginHost::Service::Configuration().ClassName.Value());
+        const string callSign(PluginHost::Service::Configuration().Callsign.Value());
+
+        IShell::state currentState(State());
+        if (currentState == IShell::ACTIVATED
+            && PluginsHibernate::IPluginsHibernateAdministrator::Instance().isProcessed(callSign) == true) {
+
+            restoreSucceed = PluginsHibernate::IPluginsHibernateAdministrator::Instance().restore(callSign, 10000);
+            if(restoreSucceed)
+            {
+                SYSLOG(Logging::Notification, (_T("Restore plugin[%s] succeed"), callSign.c_str()));
+            }
+            else
+            {
+                SYSLOG(Logging::Notification, (_T("Restore plugin[%s] error"), callSign.c_str()));
+            }
+
+        } else {
+            SYSLOG(Logging::Notification, (_T("Illegal state %d to restore plugin[%s]:[%s]"), (int)currentState, className.c_str(), callSign.c_str()));
+            result = Core::ERROR_ILLEGAL_STATE;
+        }
+
+        Unlock();
+
+        return result;
+     }
 
     uint32_t Server::Service::Unavailable(const reason why) {
         uint32_t result = Core::ERROR_NONE;

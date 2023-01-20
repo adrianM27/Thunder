@@ -986,6 +986,8 @@ namespace PluginHost {
             uint32_t Activate(const reason) override;
             uint32_t Deactivate(const reason) override;
             uint32_t Unavailable(const reason) override;
+            uint32_t Hibernate(const reason) override;
+            uint32_t Restore(const reason) override;
             reason Reason() const override
             {
                 return (_reason);

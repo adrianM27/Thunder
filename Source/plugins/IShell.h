@@ -237,6 +237,8 @@ namespace PluginHost {
         // NOTE: These are Blocking calls!!!!!
         virtual uint32_t Activate(const reason) = 0;
         virtual uint32_t Deactivate(const reason) = 0;
+        virtual uint32_t Hibernate(const reason) = 0;
+        virtual uint32_t Restore(const reason) = 0;
         virtual uint32_t Unavailable(const reason) = 0;
         virtual reason Reason() const = 0;
 

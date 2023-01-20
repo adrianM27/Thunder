@@ -48,7 +48,8 @@ namespace PluginHost {
                 DESTROYED = PluginHost::IShell::DESTROYED,
                 PRECONDITION = PluginHost::IShell::PRECONDITION,
                 SUSPENDED,
-                RESUMED
+                RESUMED,
+                HIBERNATED
             };
 
             class EXTERNAL State : public Core::JSON::EnumType<state> {

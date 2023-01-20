@@ -35,6 +35,8 @@ namespace Plugin {
     {
         Register<ActivateParamsInfo,void>(_T("activate"), &Controller::endpoint_activate, this);
         Register<ActivateParamsInfo,void>(_T("deactivate"), &Controller::endpoint_deactivate, this);
+        Register<ActivateParamsInfo,void>(_T("hibernate"), &Controller::endpoint_hibernate, this);
+        Register<ActivateParamsInfo,void>(_T("restore"), &Controller::endpoint_restore, this);
         Register<ActivateParamsInfo,void>(_T("unavailable"), &Controller::endpoint_unavailable, this);
         Register<StartdiscoveryParamsData,void>(_T("startdiscovery"), &Controller::endpoint_startdiscovery, this);
         Register<void,void>(_T("storeconfig"), &Controller::endpoint_storeconfig, this);
@@ -57,6 +59,8 @@ namespace Plugin {
         Unregister(_T("storeconfig"));
         Unregister(_T("startdiscovery"));
         Unregister(_T("unavailable"));
+        Unregister(_T("restore"));
+        Unregister(_T("hibernate"));
         Unregister(_T("deactivate"));
         Unregister(_T("activate"));
         Unregister(_T("configuration"));
@@ -132,6 +136,80 @@ namespace Plugin {
             if (_pluginServer->Services().FromIdentifier(callsign, service) == Core::ERROR_NONE) {
                 ASSERT(service.IsValid());
                 result = service->Deactivate(PluginHost::IShell::REQUESTED);
+
+                // Normalise return code
+                if ((result != Core::ERROR_NONE) && (result != Core::ERROR_ILLEGAL_STATE) && (result !=  Core::ERROR_INPROGRESS)) {
+                    result = Core::ERROR_CLOSING_FAILED;
+                }
+            }
+            else {
+                result = Core::ERROR_UNKNOWN_KEY;
+            }
+        }
+        else {
+            result = Core::ERROR_PRIVILIGED_REQUEST;
+        }
+
+        return result;
+    }
+ 
+    // Method: checkpoint - Checkpoints a plugin
+    // Return codes:
+    //  - ERROR_NONE: Success
+    //  - ERROR_UNKNOWN_KEY: The plugin does not exist
+    //  - ERROR_ILLEGAL_STATE: Current state of the plugin does not allow checkpoint
+    //  - ERROR_CLOSING_FAILED: Failed to checkpoint the plugin
+    //  - ERROR_PRIVILEGED_REQUEST: Checkpoint of the plugin is not allowed (e.g. Controller)
+    uint32_t Controller::endpoint_hibernate(const ActivateParamsInfo& params)
+    {
+        uint32_t result = Core::ERROR_OPENING_FAILED;
+        const string& callsign = params.Callsign.Value();
+
+        ASSERT(_pluginServer != nullptr);
+
+        if (callsign != Callsign()) {
+            Core::ProxyType<PluginHost::Server::Service> service;
+
+            if (_pluginServer->Services().FromIdentifier(callsign, service) == Core::ERROR_NONE) {
+                ASSERT(service.IsValid());
+                result = service->Hibernate(PluginHost::IShell::REQUESTED);
+
+                // Normalise return code
+                if ((result != Core::ERROR_NONE) && (result != Core::ERROR_ILLEGAL_STATE) && (result !=  Core::ERROR_INPROGRESS) && (result != Core::ERROR_PENDING_CONDITIONS)) {
+                    result = Core::ERROR_OPENING_FAILED;
+                }
+            }
+            else {
+                result = Core::ERROR_UNKNOWN_KEY;
+            }
+        }
+        else {
+            result = Core::ERROR_PRIVILIGED_REQUEST;
+        }
+
+        return result;
+    }
+
+    // Method: restore - Restores a plugin
+    // Return codes:
+    //  - ERROR_NONE: Success
+    //  - ERROR_UNKNOWN_KEY: The plugin does not exist
+    //  - ERROR_ILLEGAL_STATE: Current state of the plugin does not allow restore
+    //  - ERROR_CLOSING_FAILED: Failed to restore the plugin
+    //  - ERROR_PRIVILEGED_REQUEST: Restore of the plugin is not allowed (e.g. Controller)
+    uint32_t Controller::endpoint_restore(const ActivateParamsInfo& params)
+    {
+        uint32_t result = Core::ERROR_OPENING_FAILED;
+        const string& callsign = params.Callsign.Value();
+
+        ASSERT(_pluginServer != nullptr);
+
+        if (callsign != Callsign() && (callsign != _T("SecurityAgent"))) {
+            Core::ProxyType<PluginHost::Server::Service> service;
+
+            if (_pluginServer->Services().FromIdentifier(callsign, service) == Core::ERROR_NONE) {
+                ASSERT(service.IsValid());
+                result = service->Restore(PluginHost::IShell::REQUESTED);
 
                 // Normalise return code
                 if ((result != Core::ERROR_NONE) && (result != Core::ERROR_ILLEGAL_STATE) && (result !=  Core::ERROR_INPROGRESS)) {
