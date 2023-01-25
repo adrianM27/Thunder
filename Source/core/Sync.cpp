@@ -897,9 +897,13 @@ namespace Core {
 
             // We are not busy Setting the flag, so we can check it.
             if (m_blCondition == false) {
-                struct timespec structTime;
+                struct timespec structTime = {0};
 
-                clock_gettime(CLOCK_MONOTONIC, &structTime);
+                if (clock_gettime(CLOCK_MONOTONIC, &structTime) == -1)
+                {
+                    printf("EINVAL:: THUNDER_CLOCK_GETTIME_FAILED");
+                    assert(0 && "EINVAL:: THUNDER_CLOCK_GETTIME_FAILED");
+                }
                 structTime.tv_nsec += ((nTime % 1000) * 1000 * 1000); /* remainder, milliseconds to nanoseconds */
                 structTime.tv_sec += (nTime / 1000) + (structTime.tv_nsec / 1000000000); /* milliseconds to seconds */
                 structTime.tv_nsec = structTime.tv_nsec % 1000000000;

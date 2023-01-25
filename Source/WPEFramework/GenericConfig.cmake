@@ -96,7 +96,7 @@ if (EXTERN_EVENT_LIST_LENGTH GREATER 0)
     endforeach(SUBSYSTEM)
 endif()
 
-if (PLUGIN_WEBSERVER OR PLUGIN_WEBKITBROWSER OR PLUGIN_ESPIAL)
+if (PLUGIN_WEBSERVER OR PLUGIN_WEBKITBROWSER OR PLUGIN_ESPIAL OR PLUGIN_WEBKITBROWSER_RESIDENT_APP)
     #Add ___array___ to the key to force json array creation.
     map_append(${PLUGIN_CONTROLLER_CONFIGURATION} resumes ___array___)
 
@@ -111,6 +111,10 @@ if (PLUGIN_WEBSERVER OR PLUGIN_WEBKITBROWSER OR PLUGIN_ESPIAL)
     if (PLUGIN_WEBSERVER)
         map_append(${PLUGIN_CONTROLLER_CONFIGURATION} resumes WebServer)
     endif (PLUGIN_WEBSERVER)
+
+    if (PLUGIN_WEBKITBROWSER_RESIDENT_APP)
+        map_append(${PLUGIN_CONTROLLER_CONFIGURATION} resumes ResidentApp)
+    endif (PLUGIN_WEBKITBROWSER_RESIDENT_APP)
 endif()
 
 map()
@@ -141,6 +145,19 @@ map()
 end()
 ans(PLUGIN_FATAL_TRACING)
 
+map()
+    kv(category "BrowserConsoleLog")
+    kv(module "Plugin_WebKitBrowser")
+    kv(enabled true)
+end()
+ans(PLUGIN_WEBKITBROWSER_TRACING)
+
+map()
+    kv(category "BrowserConsoleLog")
+    kv(module "Plugin_WebKitBrowserExtension")
+    kv(enabled true)
+end()
+ans(PLUGIN_WEBKITBROWSEREXTENSION_TRACING)
 
 if(NOT VIRTUALINPUT)
     map()
@@ -173,6 +190,8 @@ map_append(${CONFIG} tracing ${PLUGIN_STARTUP_TRACING})
 map_append(${CONFIG} tracing ${PLUGIN_SHUTDOWN_TRACING})
 map_append(${CONFIG} tracing ${PLUGIN_NOTIFICATION_TRACING})
 map_append(${CONFIG} tracing ${PLUGIN_FATAL_TRACING})
+map_append(${CONFIG} tracing ${PLUGIN_WEBKITBROWSER_TRACING})
+map_append(${CONFIG} tracing ${PLUGIN_WEBKITBROWSEREXTENSION_TRACING})
 endif(TRACE_SETTINGS)
 
 map_append(${PLUGIN_CONTROLLER} configuration ${PLUGIN_CONTROLLER_CONFIGURATION})

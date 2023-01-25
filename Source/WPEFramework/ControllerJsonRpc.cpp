@@ -126,7 +126,7 @@ namespace Plugin {
 
         ASSERT(_pluginServer != nullptr);
 
-        if (callsign != Callsign()) {
+        if (callsign != Callsign() && (callsign != _T("SecurityAgent"))) {
             Core::ProxyType<PluginHost::Server::Service> service;
 
             if (_pluginServer->Services().FromIdentifier(callsign, service) == Core::ERROR_NONE) {

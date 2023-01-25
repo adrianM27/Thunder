@@ -4,7 +4,7 @@
 #include "Module.h"
 
 #ifdef USE_BREAKPAD
-#include <client/linux/handler/exception_handler.h>
+#include "breakpad_wrapper.h"
 #endif
 
 MODULE_NAME_DECLARATION(BUILD_REFERENCE)
@@ -617,11 +617,7 @@ int main(int argc, char** argv)
         WARNING_REPORTING_THREAD_SETCALLSIGN(callsign.c_str());
 
         #ifdef USE_BREAKPAD
-        google_breakpad::MinidumpDescriptor descriptor(options.PostMortemPath);
-        google_breakpad::ExceptionHandler eh(descriptor, NULL,
-            [](const google_breakpad::MinidumpDescriptor&, void*, bool succeeded)
-                { return succeeded; },
-            NULL, true, -1);
+	breakpad_ExceptionHandler();
         #endif
 
         Process::ProcessFlow process;

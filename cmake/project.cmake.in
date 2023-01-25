@@ -141,6 +141,11 @@ macro(write_config)
                 map_append(${plugin_config} startuporder ${startuporder})
             endif()
 
+            if (NOT ${persistentpathpostfix} STREQUAL "")
+                map_append(${plugin_config} persistentpathpostfix ${persistentpathpostfix})
+                unset(persistentpathpostfix)
+            endif()
+
             if (NOT ${configuration} STREQUAL "")
                 map_append(${plugin_config} configuration ${configuration})
             endif()

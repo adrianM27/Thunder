@@ -471,6 +471,9 @@ namespace Plugin {
                     if (callSign == _service->Callsign()) {
                         result->ErrorCode = Web::STATUS_FORBIDDEN;
                         result->Message = _T("The PluginHost Controller can not be deactivated.");
+                    } else if (callSign == _T("SecurityAgent")) {
+                        result->ErrorCode = Web::STATUS_FORBIDDEN;
+                        result->Message = _T("SecurityAgent plugin can not be deactivated.");
                     } else {
                         Core::ProxyType<PluginHost::Server::Service> pluginInfo(FromIdentifier(callSign));
 

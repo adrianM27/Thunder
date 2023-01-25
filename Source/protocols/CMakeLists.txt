@@ -173,6 +173,10 @@ install(
 
 InstallCMakeConfig(TARGETS ${TARGET})
 
+InstallPackageConfig(
+	        TARGETS ${TARGET}
+	        DESCRIPTION "Enable ease of development for Protocol support." )
+
 #FIXME: This is messy, but it's the consequence of combining more independent libraries in one.
 install(
         FILES ${COM_INCLUDES} ../com/Module.h

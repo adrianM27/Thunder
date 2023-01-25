@@ -1,5 +1,5 @@
 find_package(PkgConfig)
-pkg_check_modules(BREAKPAD breakpad-client)
+pkg_check_modules(BREAKPAD breakpad-client breakpad-wrapper)
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(BREAKPAD REQUIRED_VARS BREAKPAD_INCLUDE_DIRS BREAKPAD_LIBRARIES)
