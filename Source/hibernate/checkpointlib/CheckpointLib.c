@@ -21,7 +21,7 @@
 #include "../hibernate.h"
 #include "../common/Log.h"
 
-//TODO: #include <memcr.h>
+#include <memcr.h>
 #include <assert.h>
 #include <stdlib.h>
 
@@ -39,9 +39,9 @@ uint32_t HibernateProcess(const uint32_t timeout, const pid_t pid, const char da
 
     *storage = (void*)(metaData);
 
-    //TODO: MEMCR_Checkpoint(timeoute, pid, data_dir, volatile_dir);
+    uint32_t ret = MEMCR_Checkpoint(timeoute, pid, data_dir, volatile_dir);
 
-    return HIBERNATE_ERROR_NONE;
+    return (ret == 0)? HIBERNATE_ERROR_NONE : HIBERNATE_ERROR_GENERAL;
 }
 
 uint32_t WakeupProcess(const uint32_t timeout, const pid_t pid, const char data_dir[], const char volatile_dir[], void** storage)
@@ -50,9 +50,9 @@ uint32_t WakeupProcess(const uint32_t timeout, const pid_t pid, const char data_
     CheckpointMetaData* metaData = (CheckpointMetaData*)(*storage);
     assert(metaData->pid == pid);
 
-    //TODO: MEMCR_Resume(timeoute, pid, data_dir, volatile_dir);
+    uint32_t ret = MEMCR_Resume(timeoute, pid, data_dir, volatile_dir);
     free(metaData);
     *storage = NULL;
 
-    return HIBERNATE_ERROR_NONE;
+    return (ret == 0)? HIBERNATE_ERROR_NONE : HIBERNATE_ERROR_GENERAL;
 }
